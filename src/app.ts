@@ -5,6 +5,7 @@ import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import compress from '@fastify/compress';
 import handleResponse from './service/handleResponse.service';
+import authRoutes from './routes/auth.routes';
 
 const createServer = async () => {
   const app = Fastify({ logger: true });
@@ -34,6 +35,8 @@ const createServer = async () => {
   app.get("/check", async (req: FastifyRequest, rep: FastifyReply) => {
     handleResponse(rep, 200, 'route checking...');
   });
+
+  await app.register(authRoutes, { prefix: "/auth" });
 
   return app;
 }
