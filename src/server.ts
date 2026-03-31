@@ -1,21 +1,17 @@
-import Fastify from "fastify";
+import 'dotenv/config';
+import createServer from './app';
+import connectDatabase from './config/db.config';
 
-const app = Fastify({
-  logger: true
-});
+const startServer = async () => {
+  await connectDatabase();
 
-app.get("/", async (request, reply) => {
-  return { message: "Hello Fastify + TypeScript 🚀" };
-});
+  const app = await createServer();
+  const port = Number(process.env.PORT) || 3000;
 
-const start = async () => {
-  try {
-    await app.listen({ port: 3000 });
-    console.log("Server running on http://localhost:3000");
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  app.listen({ port, host: '0.0.0.0' });
 };
 
-start();
+startServer().catch((err) => {
+  console.error(`Server start failed: ${err}`);
+  process.exit(1);
+});
