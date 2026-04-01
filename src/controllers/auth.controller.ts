@@ -498,6 +498,14 @@ export const syncOauthUser = async (
   }
 };
 
+export const syncProfile = async (req: FastifyRequest, rep: FastifyReply) => {
+  try{
+  }
+  catch(err) {
+    return handleResponse(rep, 401, "Invalid Clerk session.");
+  }
+}
+
 export const updateProfile = async (
   req: FastifyRequest<{ Body: AuthBody }>,
   rep: FastifyReply,
