@@ -24,6 +24,35 @@ type AuthBody = {
   clerkId?: string;
 };
 
+const getClerkOauthProfile = async (clerkId: string) => {
+  if (!process.env.CLERK_SECRET_KEY) {
+    return null;
+  }
+
+  const clerkClient = createClerkClient({
+    secretKey: process.env.CLERK_SECRET_KEY,
+  });
+  const clerkUser = await clerkClient.users.getUser(clerkId);
+  const primaryEmailAddress =
+    clerkUser.emailAddresses.find(
+      (emailAddress) => emailAddress.id === clerkUser.primaryEmailAddressId,
+    )?.emailAddress ||
+    clerkUser.emailAddresses[0]?.emailAddress;
+  const externalProvider =
+    clerkUser.externalAccounts.find((account) => account.provider === "google")?.provider ||
+    undefined;
+
+  return {
+    email: primaryEmailAddress ? normalizeEmail(primaryEmailAddress) : undefined,
+    authProvider: externalProvider === "google" ? "google" : "google",
+    avatarImageUrl: clerkUser.imageUrl || undefined,
+    name:
+      [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() ||
+      clerkUser.username ||
+      undefined,
+  };
+};
+
 const OTP_PURPOSE_SIGN_UP = "sign-up";
 const OTP_PURPOSE_LOGIN = "login";
 const OTP_PURPOSE_FORGOT_PASSWORD = "forgot-password";
@@ -399,12 +428,12 @@ export const syncOauthUser = async (
   }
 
   try {
-    const email = normalizeEmail(req.body.email || "");
     const clerkId = req.body.clerkId?.trim();
-    const name = req.body.name?.trim();
+    const fallbackEmail = normalizeEmail(req.body.email || "");
+    const fallbackName = req.body.name?.trim();
 
-    if (!email || !clerkId || !name) {
-      return handleResponse(rep, 400, "Name, email, and Clerk ID are required.");
+    if (!clerkId) {
+      return handleResponse(rep, 400, "Clerk ID is required.");
     }
 
     const isVerified = await verifyClerkUserFromRequest(
@@ -416,6 +445,19 @@ export const syncOauthUser = async (
       return handleResponse(rep, 403, "Clerk user mismatch.");
     }
 
+    const clerkProfile = await getClerkOauthProfile(clerkId);
+    const email = clerkProfile?.email || fallbackEmail;
+    const resolvedName = clerkProfile?.name || fallbackName;
+    const authProvider = clerkProfile?.authProvider || "google";
+
+    if (!email || !resolvedName) {
+      return handleResponse(
+        rep,
+        400,
+        "Unable to resolve Clerk profile details for this user.",
+      );
+    }
+
     let user = await UserModel.findOne({
       $or: [{ email }, { clerkId }],
     });
@@ -424,21 +466,22 @@ export const syncOauthUser = async (
       user = await UserModel.create({
         email,
         clerkId,
-        name,
+        name: resolvedName,
         isEmailVerified: true,
-        authProviders: ["google"],
+        authProviders: [authProvider],
+        authProvider,
+        avatarImageUrl: clerkProfile?.avatarImageUrl,
       });
     } else {
       user.email = email;
       user.clerkId = clerkId;
+      user.name = resolvedName;
       user.isEmailVerified = true;
+      user.authProvider = authProvider;
+      user.avatarImageUrl = clerkProfile?.avatarImageUrl;
 
-      if (!user.name) {
-        user.name = name;
-      }
-
-      if (!user.authProviders.includes("google")) {
-        user.authProviders = [...user.authProviders, "google"];
+      if (!user.authProviders.includes(authProvider)) {
+        user.authProviders = [...user.authProviders, authProvider];
       }
 
       await user.save();

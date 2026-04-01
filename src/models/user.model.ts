@@ -8,7 +8,9 @@ export interface UserDocument {
   passwordHash?: string;
   isEmailVerified: boolean;
   authProviders: AuthProvider[];
+  authProvider?: AuthProvider;
   clerkId?: string;
+  avatarImageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,7 +41,16 @@ const userSchema = new Schema<UserDocument>(
       enum: ["password", "google"],
       default: [],
     },
+    authProvider: {
+      type: String,
+      enum: ["password", "google"],
+      trim: true,
+    },
     clerkId: {
+      type: String,
+      trim: true,
+    },
+    avatarImageUrl: {
       type: String,
       trim: true,
     },
