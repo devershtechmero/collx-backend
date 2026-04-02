@@ -489,7 +489,7 @@ export const syncOauthUser = async (
 
     return handleResponse(rep, 200, "OAuth user synced successfully.", {
       user: {
-        email: user.email,
+        email: user.email,  
         name: user.name,
       },
     });
@@ -498,10 +498,19 @@ export const syncOauthUser = async (
   }
 };
 
-export const syncProfile = async (req: FastifyRequest, rep: FastifyReply) => {
-  try{
+export const syncProfile = async (req: FastifyRequest<{ Body: AuthBody }>, rep: FastifyReply) => {
+  try {
+    if (!req.body.clerkId) {
+      return handleResponse(rep, 401, "Unauthorized request.");
+    }
+
+    const userInfo = await UserModel.findOne({ clerkId: req.body.clerkId },
+      { name: 1, email: 1, isEmailVerified: 1, avatarImageUrl: 1 }
+    );
+
+    return handleResponse(rep, 200, "User profile fetched", userInfo);
   }
-  catch(err) {
+  catch (err) {
     return handleResponse(rep, 401, "Invalid Clerk session.");
   }
 }
