@@ -1,10 +1,7 @@
 import 'dotenv/config';
 import createServer from './app';
-import connectDatabase from './config/db.config';
 
 const startServer = async () => {
-  await connectDatabase();
-
   const app = await createServer();
   const port = Number(process.env.PORT) || 3000;
 

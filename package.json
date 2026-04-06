@@ -13,18 +13,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@clerk/backend": "^3.2.3",
     "@fastify/compress": "^8.3.1",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^13.0.2",
-    "@fastify/rate-limit": "^10.3.0",
-    "@types/nodemailer": "^7.0.11",
-    "better-auth": "^1.5.6",
     "dotenv": "^17.3.1",
-    "fastify": "^5.8.4",
-    "mongoose": "^9.3.3",
-    "nodemailer": "^8.0.4"
+    "fastify": "^5.8.4"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
