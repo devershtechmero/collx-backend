@@ -5,11 +5,13 @@ import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import compress from '@fastify/compress';
 import handleResponse from './service/handleResponse.service';
+import multipart from '@fastify/multipart';
 
 const createServer = async () => {
   const app = Fastify({ logger: true });
   const clientUrl = process.env.CLIENT_URL;
 
+  await app.register(multipart);
   await app.register(helmet);
   await app.register(compress);
 
