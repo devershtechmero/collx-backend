@@ -149,3 +149,30 @@ export const fetchCardDetailsById = async (id: string) => {
     throw new Error(e?.message || "Failed to fetch card by id");
   }
 };
+
+export const fetchCardPriceHistory = async (
+  card_id: string,
+  grade: string,
+  days: string
+) => {
+  try {
+    const response = await axios.post(
+      "https://ai.cardhedger.com/api/price-history",
+      {
+        card_id,
+        grade,
+        days,
+      },
+      {
+        headers: cardHedgerHeaders,
+        maxBodyLength: Infinity,
+        validateStatus: () => true,
+      }
+    );
+
+    return parseAxiosResponse(response);
+  } catch (e: any) {
+    console.error(`Error in fetching card price history service - ${e}`);
+    throw new Error(e?.message || "Failed to fetch card price history");
+  }
+};

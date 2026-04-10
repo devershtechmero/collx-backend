@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import handleResponse from "../service/handleResponse.service";
-import { fetchCardDetailsById, fetchDataFromCardHedge, priceService, ximilarScanService } from "../service/card.service";
+import { fetchCardDetailsById, fetchCardPriceHistory, fetchDataFromCardHedge, priceService, ximilarScanService } from "../service/card.service";
 
 type CardPriceBody = {
   query?: string;
@@ -11,6 +11,12 @@ type CardPriceBody = {
 type PaginationQuery = {
   page?: string | number;
   limit?: string | number;
+};
+
+type CardPriceHistoryBody = {
+  card_id?: string;
+  grade?: string;
+  days?: string;
 };
 
 export const scanACard = async (req: FastifyRequest, rep: FastifyReply) => {
@@ -112,5 +118,28 @@ export const getCardById = async (
       success: false,
       error: e?.message || "Failed to fetch card by id",
     });
+  }
+};
+
+export const getCardPriceHistory = async (
+  req: FastifyRequest<{ Body: CardPriceHistoryBody }>,
+  rep: FastifyReply
+) => {
+  try {
+    const { card_id, grade, days } = req.body ?? {};
+
+    if (!card_id || !grade || !days) {
+      return handleResponse(rep, 400, "Invalid data");
+    }
+
+    const data = await fetchCardPriceHistory(card_id, grade, days);
+    return handleResponse(rep, 200, "Card pricing fetched", data);
+  } catch (e: any) {
+    console.error(`Error in getting card price history - ${e}`);
+    return handleResponse(
+      rep,
+      500,
+      e?.message || "Failed to fetch card price history"
+    );
   }
 };
