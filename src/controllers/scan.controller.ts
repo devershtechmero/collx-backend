@@ -39,12 +39,12 @@ export const scanACard = async (req: FastifyRequest, rep: FastifyReply) => {
 
     const base64Image = buffer.toString("base64");
 
-    const ximilarRes = await ximilarScanService(base64Image);
+    // const ximilarRes = await ximilarScanService(base64Image);
 
     return handleResponse(rep, 200, "Scanning completed", {
       filename: data.filename,
       mimetype: data.mimetype,
-      ximilar: ximilarRes,
+      // ximilar: ximilarRes,
     });
   } catch (err: any) {
     return rep.status(500).send({ error: err.message });
